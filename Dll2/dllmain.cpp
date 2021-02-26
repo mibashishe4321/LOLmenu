@@ -20,9 +20,20 @@
 #include "Menu.h"
 #include <Windows.h>
 
+#include "ini.h"
+
+#ifdef _WIN32
+#include <io.h> 
+#define access    _access_s
+#else
+#include <unistd.h>
+#endif
+
 using namespace std;
 
 int snapValue;
+int fovW;
+int fovH;
 
 int get_screen_width(void) {
     return GetSystemMetrics(SM_CXSCREEN);
@@ -108,6 +119,12 @@ inline bool is_colorY(int red, int green, int blue) {
     return false;
 }
 
+//checking if settings.ini is present
+bool FileExists(const std::string& Filename)
+{
+    return access(Filename.c_str(), 0) == 0;
+}
+
 InterceptionContext context;
 InterceptionDevice device;
 InterceptionStroke stroke;
@@ -120,7 +137,7 @@ int aim_y = 0;
 
 //bot with purple (original (again not default))
 void bot() {
-    int w = 100, h = 100;
+    int w = fovW, h = fovH;
     auto t_start = std::chrono::high_resolution_clock::now();
     auto t_end = std::chrono::high_resolution_clock::now();
 
@@ -173,7 +190,7 @@ void bot() {
 
 //bot with red
 void botR() {
-    int w = 100, h = 100;
+    int w = fovW, h = fovH;
     auto t_start = std::chrono::high_resolution_clock::now();
     auto t_end = std::chrono::high_resolution_clock::now();
 
@@ -226,7 +243,7 @@ void botR() {
 
 //bot with yellow
 void botY() {
-    int w = 100, h = 100;
+    int w = fovW, h = fovH;
     auto t_start = std::chrono::high_resolution_clock::now();
     auto t_end = std::chrono::high_resolution_clock::now();
 
@@ -278,13 +295,6 @@ void botY() {
 }
 
 int main(void) {
-    ShowCursor(false);
-
-    //for the menu
-    bool colorOptions = false;
-    bool changeConfig = false;
-    bool snappingArea = false;
-    bool commit = false;
 
     //for toggle keys
     bool toggleKey = false;
@@ -297,6 +307,7 @@ int main(void) {
     bool hold = false;
 
     string color;
+    int mode = 0;
 
     double sensitivity = 0.52;
     double smoothing = 0.5;
@@ -304,314 +315,568 @@ int main(void) {
     AttachConsole(GetCurrentProcessId());
     auto w_f = freopen("CON", "w", stdout);
     auto r_f = freopen("CON", "r", stdin);
-    //start
-    cout << "[+] WELCOME TO LOLMENU [+]" << endl;
-    cout << "[-] ENTER YOUR CONFIG [-]" << endl << endl;
-    cout << "[-] SENSITIVITY: ";
-    cin >> sensitivity;
-    cout << "[-] SMOOTHING: ";
-    cin >> smoothing;
-    int mode = 0;
-    cout << "[-] MODE: ";
-    cin >> mode;
 
-    clear();
-    cout << "CONFIGURATION SUCCESSFULLY LOADED. LOADING CHEAT OPTIONS.";
-    Sleep(2000);
+    string loadSelect;
 
-    Menu menu = Menu("[~] COLOR AIM MENU [~]", "[!] TO FINISH COMMIT YOUR CHANGES [!]");
+    INIReader reader("config.ini");
 
-    menu.AddOption("[!!] NOTHING IS DEFAULT SET EVERY SETTING HERE [!!]");
-    menu.AddOption("[TAB] SET AIM COLOR");
-    menu.AddOption("[F1] CHANGE SNAPPING AREA");
-    menu.AddOption("[F2] CHANGE TOGGLE KEY");
-    menu.AddOption("[ALT] CHANGE CONFIGURATION");
-    menu.AddOption("[ESCAPE] COMMIT CHANGES");
-    menu.AddOption(0, 99, false);
-    menu.Print();
-    while (true) {
-        if (GetAsyncKeyState(VK_TAB)) {
-            colorOptions = !colorOptions;
+    if (FileExists("config.ini") == true) {
+        cout << "[+] CONFIG FILE FOUND [+]" << endl << endl;
 
-            menu.UpdateOption(1, 1);
-            Sleep(1000);
+        cout << "Do you want to load it (YES OR NO): ";
+        cin >> loadSelect;
+
+        if (loadSelect == "YES") {
+            cout << "[+] CONFIG LOADED [+]";
+            Sleep(2000);
             clear();
-            cin.clear();
-            fflush(stdin);
 
-            cout << "[-] ENTER COLOR (CASE SENSITIVE - RED, YELLOW, PURPLE) ! RED NOT FUNCTIONAL ! : ";
-            cin >> color;
-            if (color == "RED") {
-                cout << "[!] RED ISN'T FUNCTIONAL, GO BACK AND CHANGE YOUR CHOICE [!]" << endl;
+            cout << "Config loaded from 'config.ini'" << endl << endl;
 
-                Sleep(1000);
+            cout << "[+] CONFIGURATION [+]" << endl << endl;
+            cout << "Sensitivity : " << reader.GetFloat("config", "sensitivity", 0.00) << endl
+                << "Smoothing : " << reader.GetFloat("config", "smoothing", 0.00) << endl
+                << "Mode : " << reader.GetInteger("config", "mode", 0) << endl << endl
+                << "[+] SETTINGS [+]" << endl << endl
+                << "Aim Color : " << reader.Get("settings", "aim color", "") << endl
+                << "Snapping Area : " << reader.Get("settings", "snapping area", "") << endl
+                << "Toggle Key : " << reader.Get("settings", "toggle key", "") << endl
+                << "Hold / Toggle : " << reader.Get("settings", "hold or toggle", "") << endl
+                << "H FOV : " << reader.GetInteger("settings", "hFov", 0) << endl
+                << "V FOV : " << reader.GetInteger("settings", "vFov", 0) << endl;
 
-                menu.UpdateOption(1, 13);
-                menu.Print();
-            }
-            else if (color == "YELLOW") {
-                cout << "[+] COLOR IS SET TO YELLOW [+]" << endl;
+            cout << endl << endl << "[$] SUCCESSFUL LAUNCH YOUR GAME [$]" << endl << "[!] THIS PROMPT WILL CLOSE IN 5 SECONDS [!]";
 
-                Sleep(1000);
+            Sleep(5000);
+            fclose(w_f);
+            fclose(r_f);
+            FreeConsole();
 
-                menu.UpdateOption(1, 4);
-                menu.Print();
-            }
-            else if (color == "PURPLE") {
-                cout << "[+] COLOR IS SET TO PURPLE [+]" << endl;
+            sensitivity = reader.GetFloat("config", "sensitivity", 0.00);
+            smoothing = reader.GetFloat("config", "smoothing", 0.00);
+            mode = reader.GetInteger("config", "mode", 0);
 
-                Sleep(1000);
-
-                menu.UpdateOption(1, 5);
-                menu.Print();
-            }
-            else {
-                cout << "[!] INVALID COLOR OPTION [!]";
-
-                menu.UpdateOption(1, 13);
-                Sleep(1000);
-
-                menu.Print();
-            }
-        }
-
-        else if (GetAsyncKeyState(VK_F1)) {
-
-            snappingArea = !snappingArea;
-
-            menu.UpdateOption(2, 1);
-            Sleep(1000);
-            clear();
-            cin.clear();
-            fflush(stdin);
-
-            string area;
-
-            cout << "[-] ENTER AIMING AREA (CASE SENSITIVE - HEAD, NECK, CHEST): ";
-            cin >> area;
-
-            if (area == "HEAD") {
+            color = reader.Get("settings", "aim color", "");
+            if (reader.Get("settings", "snapping area", "") == "HEAD") {
                 snapValue = 3;
-                cout << "[+] SNAPPING SET TO HEAD [+]";
-                Sleep(2000);
-
-                clear();
-
-                menu.UpdateOption(2, 7);
-                menu.Print();
             }
-            else if (area == "NECK") {
+            else if (reader.Get("settings", "snapping area", "") == "NECK") {
                 snapValue = 4;
-                cout << "[+] SNAPPING SET TO NECK [+]";
-                Sleep(2000);
-
-                clear();
-
-                menu.UpdateOption(2, 8);
-                menu.Print();
             }
-            else if (area == "CHEST") {
+            else if (reader.Get("settings", "snapping area", "") == "CHEST") {
                 snapValue = 10;
-                cout << "[+] SNAPPING SET TO CHEST [+]";
-                Sleep(2000);
-
-                clear();
-
-                menu.UpdateOption(2, 9);
-                menu.Print();
             }
-            else {
-                cout << "[!] INVALID CHOICE [!]";
-                menu.UpdateOption(2, 13);
-                Sleep(2000);
 
-                clear();
-
-                menu.Print();
+            if (reader.Get("settings", "toggle key", "") == "LCLICK") {
+                lClick = true;
             }
-        }
+            else if (reader.Get("settings", "toggle key", "") == "MB4") {
+                mb4 = true;
+            }
+            else if (reader.Get("settings", "toggle key", "") == "mb5") {
+                lClick = true;
+            }
 
-        else if (GetAsyncKeyState(VK_F2)) {
-        changeKey = !changeKey;
-
-        int choice;
-
-        menu.UpdateOption(3, 1);
-        Sleep(1000);
-        clear();
-        cin.clear();
-        fflush(stdin);
-
-        cout << "[1] LEFT CLICK" << endl;
-        cout << "[2] MB4" << endl;
-        cout << "[3] MB5" << endl;
-
-        cout << endl << "[-] ENTER YOUR CHOICE: ";
-        cin >> choice;
-
-        if (choice == 1) {
-            lClick = true;
-
-            clear();
-            cout << "[+] AIM KEY SET TO LEFT CLICK";
-
-            cin.clear();
-            fflush(stdin);
-
-            clear();
-
-            int changeMode;
-
-            cout << "[1] HOLD" << endl;
-            cout << "[2] TOGGLE" << endl;
-
-            cout << "[-] ENTER YOUR CHOICE: ";
-            cin >> changeMode;
-            if (changeMode == 1) {
+            if (reader.Get("settings", "hold or toggle", "") == "TOGGLE") {
+                hold = false;
+            }
+            if (reader.Get("settings", "hold or toggle", "") == "HOLD") {
                 hold = true;
-                clear();
-                cout << "[+] AIM KEY SET TO HOLD [+]";
-                Sleep(1000);
+            }
+
+            fovW = reader.GetInteger("settings", "hFov", 0);
+            fovH = reader.GetInteger("settings", "vFov", 0);
+
+            if (color == "PURPLE") {
+                //aim start
+                thread(bot).detach();
+            }
+
+            else if (color == "RED") {
+                //aim start
+                thread(botR).detach();
+            }
+
+            else if (color == "YELLOW") {
+                //aim start
+                thread(botY).detach();
+            }
+
+            auto t_start = std::chrono::high_resolution_clock::now();
+            auto t_end = std::chrono::high_resolution_clock::now();
+            auto left_start = std::chrono::high_resolution_clock::now();
+            auto left_end = std::chrono::high_resolution_clock::now();
+            double sensitivity_x = 1.0 / sensitivity / (screen_width / 1920.0) * 1.08;
+            double sensitivity_y = 1.0 / sensitivity / (screen_height / 1080.0) * 1.08;
+            bool left_down = false;
+
+            context = interception_create_context();
+            interception_set_filter(context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
+
+            while (interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
+                InterceptionMouseStroke& mstroke = *(InterceptionMouseStroke*)&stroke;
+                t_end = std::chrono::high_resolution_clock::now();
+                double elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+
+                if (mstroke.state & INTERCEPTION_MOUSE_LEFT_BUTTON_UP) {
+                    left_down = false;
                 }
-            else if (changeMode == 2) {
-                clear();
-                cout << "[+] AIM KEY SET TO TOGGLE [+]";
+
+                if (toggleActive == true) {
+
+                    if (hold == true) {
+                        if (lClick == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) {
+                                aim = !aim;
+                            }
+                            if (mstroke.state & INTERCEPTION_MOUSE_LEFT_BUTTON_UP) {
+                                aim = !aim;
+                            }
+                        }
+
+                        if (mb4 == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_4_DOWN) {
+                                aim = !aim;
+                            }
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_4_UP) {
+                                aim = !aim;
+                            }
+                        }
+
+                        if (mb5 == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_5_DOWN) {
+                                aim = !aim;
+                            }
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_5_UP) {
+                                aim = !aim;
+                            }
+                        }
+                    }
+
+                    if (hold == false) {
+                        if (lClick == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) {
+                                aim = !aim;
+                            }
+                        }
+
+                        if (mb4 == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_4_DOWN) {
+                                aim = !aim;
+                            }
+                        }
+
+                        if (mb5 == true) {
+                            if (mstroke.state & INTERCEPTION_MOUSE_BUTTON_5_DOWN) {
+                                aim = !aim;
+                            }
+                        }
+                    }
+
+
+                    if (aim) {
+                        CURSORINFO cursorInfo = { 0 };
+                        cursorInfo.cbSize = sizeof(cursorInfo);
+                        GetCursorInfo(&cursorInfo);
+                        if (cursorInfo.flags != 1) {
+                            if (((mode & 1) > 0) && (mstroke.state & INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN)) {
+                                left_down = true;
+                                if (elapsed_time_ms > 7) {
+                                    t_start = std::chrono::high_resolution_clock::now();
+                                    left_start = std::chrono::high_resolution_clock::now();
+                                    if (aim_x != 0 || aim_y != 0) {
+                                        mstroke.x += double(aim_x) * sensitivity_x;
+                                        mstroke.y += double(aim_y) * sensitivity_y;
+                                    }
+                                }
+                            }
+                            else if (((mode & 2) > 0) && (mstroke.flags == 0)) {
+                                if (elapsed_time_ms > 7) {
+                                    t_start = std::chrono::high_resolution_clock::now();
+                                    if (aim_x != 0 || aim_y != 0) {
+                                        left_end = std::chrono::high_resolution_clock::now();
+                                        double recoil_ms = std::chrono::duration<double, std::milli>(left_end - left_start).count();
+                                        double extra = 38.0 * (screen_height / 1080.0) * (recoil_ms / 1000.0);
+                                        if (!left_down) {
+                                            extra = 0;
+                                        }
+                                        else if (extra > 38.0) {
+                                            extra = 38.0;
+                                        }
+                                        double v_x = double(aim_x) * sensitivity_x * smoothing;
+                                        double v_y = double(aim_y + extra) * sensitivity_y * smoothing;
+                                        if (fabs(v_x) < 1.0) {
+                                            v_x = v_x > 0 ? 1.05 : -1.05;
+                                        }
+                                        if (fabs(v_y) < 1.0) {
+                                            v_y = v_y > 0 ? 1.05 : -1.05;
+                                        }
+                                        mstroke.x += v_x;
+                                        mstroke.y += v_y;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                interception_send(context, device, &stroke, 1);
+                //end
+
+            }
+
+        }
+    }
+
+    // fix later
+    if (loadSelect == "NO" || FileExists("config.ini") == false) {
+        ShowCursor(false);
+
+        //for the menu
+        bool colorOptions = false;
+        bool changeConfig = false;
+        bool snappingArea = false;
+        bool commit = false;
+
+        //fov
+        bool setFov = true;
+
+        //start
+        cout << "[+] WELCOME TO LOLMENU [+]" << endl;
+        cout << "[-] ENTER YOUR CONFIG [-]" << endl << endl;
+        cout << "[-] SENSITIVITY: ";
+        cin >> sensitivity;
+        cout << "[-] SMOOTHING: ";
+        cin >> smoothing;
+        int mode = 0;
+        cout << "[-] MODE: ";
+        cin >> mode;
+
+        clear();
+        cout << "CONFIGURATION SUCCESSFULLY LOADED. LOADING CHEAT OPTIONS.";
+        Sleep(2000);
+
+        Menu menu = Menu("[~] COLOR AIM MENU [~]", "[!] TO FINISH COMMIT YOUR CHANGES [!]");
+
+        menu.AddOption("[!!] NOTHING IS DEFAULT SET EVERY SETTING HERE [!!]");
+        menu.AddOption("[TAB] SET AIM COLOR");
+        menu.AddOption("[F1] SET SNAPPING AREA");
+        menu.AddOption("[F2] SET TOGGLE KEY");
+        menu.AddOption("[F3] SET FOV");
+        menu.AddOption("[ALT] CHANGE CONFIGURATION");
+        menu.AddOption("[ESCAPE] COMMIT CHANGES");
+        menu.AddOption(0, 99, false);
+        menu.Print();
+        while (true) {
+            if (GetAsyncKeyState(VK_TAB)) {
+                colorOptions = !colorOptions;
+
+                menu.UpdateOption(1, 1);
                 Sleep(1000);
-            }
-
-
-            clear();
-            Sleep(500);
-            menu.UpdateOption(3, 10);
-            menu.Print();
-        }
-
-        else if (choice == 2) {
-            mb4 = true;
-
-            clear();
-            cout << "[+] AIM KEY SET TO MB4";
-
-            cin.clear();
-            fflush(stdin);
-
-            clear();
-
-            int changeMode;
-
-            cout << "[1] HOLD" << endl;
-            cout << "[2] TOGGLE" << endl;
-
-            cout << "[-] ENTER YOUR CHOICE: ";
-            cin >> changeMode;
-            if (changeMode == 1) {
-                hold = true;
                 clear();
-                cout << "[+] AIM KEY SET TO HOLD";
+                cin.clear();
+                fflush(stdin);
+
+                cout << "[-] ENTER COLOR (CASE SENSITIVE - RED, YELLOW, PURPLE) ! RED NOT FUNCTIONAL ! : ";
+                cin >> color;
+                if (color == "RED") {
+                    cout << "[!] RED ISN'T FUNCTIONAL, GO BACK AND CHANGE YOUR CHOICE [!]" << endl;
+
+                    Sleep(1000);
+
+                    menu.UpdateOption(1, 13);
+                    menu.Print();
+                }
+                else if (color == "YELLOW") {
+                    cout << "[+] COLOR IS SET TO YELLOW [+]" << endl;
+
+                    Sleep(1000);
+
+                    menu.UpdateOption(1, 4);
+                    menu.Print();
+                }
+                else if (color == "PURPLE") {
+                    cout << "[+] COLOR IS SET TO PURPLE [+]" << endl;
+
+                    Sleep(1000);
+
+                    menu.UpdateOption(1, 5);
+                    menu.Print();
+                }
+                else {
+                    cout << "[!] INVALID COLOR OPTION [!]";
+
+                    menu.UpdateOption(1, 13);
+                    Sleep(1000);
+
+                    menu.Print();
+                }
             }
-            else if (changeMode == 2) {
+
+            else if (GetAsyncKeyState(VK_F1)) {
+
+                snappingArea = !snappingArea;
+
+                menu.UpdateOption(2, 1);
+                Sleep(1000);
                 clear();
-                cout << "[+] AIM KEY SET TO TOGGLE [+]";
+                cin.clear();
+                fflush(stdin);
+
+                string area;
+
+                cout << "[-] ENTER AIMING AREA (CASE SENSITIVE - HEAD, NECK, CHEST): ";
+                cin >> area;
+
+                if (area == "HEAD") {
+                    snapValue = 3;
+                    cout << "[+] SNAPPING SET TO HEAD [+]";
+                    Sleep(2000);
+
+                    clear();
+
+                    menu.UpdateOption(2, 7);
+                    menu.Print();
+                }
+                else if (area == "NECK") {
+                    snapValue = 4;
+                    cout << "[+] SNAPPING SET TO NECK [+]";
+                    Sleep(2000);
+
+                    clear();
+
+                    menu.UpdateOption(2, 8);
+                    menu.Print();
+                }
+                else if (area == "CHEST") {
+                    snapValue = 10;
+                    cout << "[+] SNAPPING SET TO CHEST [+]";
+                    Sleep(2000);
+
+                    clear();
+
+                    menu.UpdateOption(2, 9);
+                    menu.Print();
+                }
+                else {
+                    cout << "[!] INVALID CHOICE [!]";
+                    menu.UpdateOption(2, 13);
+                    Sleep(2000);
+
+                    clear();
+
+                    menu.Print();
+                }
             }
 
+            else if (GetAsyncKeyState(VK_F2)) {
+                changeKey = !changeKey;
 
-            clear();
-            Sleep(500);
+                int choice;
 
-            menu.UpdateOption(3, 11);
-            clear();
-
-            menu.Print();
-        }
-
-        else if (choice == 3) {
-            mb5 = true;
-
-            clear();
-            cout << "[+] AIM KEY SET TO MB5";
-
-            cin.clear();
-            fflush(stdin);
-
-            clear();
-
-            int changeMode;
-
-            cout << "[1] HOLD" << endl;
-            cout << "[2] TOGGLE" << endl;
-
-            cout << "[-] ENTER YOUR CHOICE: ";
-            cin >> changeMode;
-            if (changeMode == 1) {
-                hold = true;
+                menu.UpdateOption(3, 1);
+                Sleep(1000);
                 clear();
-                cout << "[+] AIM KEY SET TO HOLD";
+                cin.clear();
+                fflush(stdin);
+
+                cout << "SET THIS WITH AN INTEGER. ENTER 1, 2 OR 3" << endl << endl;
+
+                cout << "[1] LEFT CLICK" << endl;
+                cout << "[2] MB4" << endl;
+                cout << "[3] MB5" << endl;
+
+                cout << endl << "[-] ENTER YOUR CHOICE: ";
+                cin >> choice;
+
+                if (choice == 1) {
+                    lClick = true;
+
+                    clear();
+                    cout << "[+] AIM KEY SET TO LEFT CLICK";
+
+                    cin.clear();
+                    fflush(stdin);
+
+                    clear();
+
+                    int changeMode;
+
+                    cout << "[1] HOLD" << endl;
+                    cout << "[2] TOGGLE" << endl;
+
+                    cout << "[-] ENTER YOUR CHOICE: ";
+                    cin >> changeMode;
+                    if (changeMode == 1) {
+                        hold = true;
+                        clear();
+                        cout << "[+] AIM KEY SET TO HOLD [+]";
+                        Sleep(1000);
+                    }
+                    else if (changeMode == 2) {
+                        clear();
+                        cout << "[+] AIM KEY SET TO TOGGLE [+]";
+                        Sleep(1000);
+                    }
+
+
+                    clear();
+                    Sleep(500);
+                    menu.UpdateOption(3, 10);
+                    menu.Print();
+                }
+
+                else if (choice == 2) {
+                    mb4 = true;
+
+                    clear();
+                    cout << "[+] AIM KEY SET TO MB4";
+
+                    cin.clear();
+                    fflush(stdin);
+
+                    clear();
+
+                    int changeMode;
+
+                    cout << "[1] HOLD" << endl;
+                    cout << "[2] TOGGLE" << endl;
+
+                    cout << "[-] ENTER YOUR CHOICE: ";
+                    cin >> changeMode;
+                    if (changeMode == 1) {
+                        hold = true;
+                        clear();
+                        cout << "[+] AIM KEY SET TO HOLD";
+                    }
+                    else if (changeMode == 2) {
+                        clear();
+                        cout << "[+] AIM KEY SET TO TOGGLE [+]";
+                    }
+
+
+                    clear();
+                    Sleep(500);
+
+                    menu.UpdateOption(3, 11);
+                    clear();
+
+                    menu.Print();
+                }
+
+                else if (choice == 3) {
+                    mb5 = true;
+
+                    clear();
+                    cout << "[+] AIM KEY SET TO MB5";
+
+                    cin.clear();
+                    fflush(stdin);
+
+                    clear();
+
+                    int changeMode;
+
+                    cout << "[1] HOLD" << endl;
+                    cout << "[2] TOGGLE" << endl;
+
+                    cout << "[-] ENTER YOUR CHOICE: ";
+                    cin >> changeMode;
+                    if (changeMode == 1) {
+                        hold = true;
+                        clear();
+                        cout << "[+] AIM KEY SET TO HOLD";
+                    }
+                    else if (changeMode == 2) {
+                        clear();
+                        cout << "[+] AIM KEY SET TO TOGGLE [+]";
+                    }
+
+
+                    clear();
+                    Sleep(500);
+
+                    menu.UpdateOption(3, 12);
+                    clear();
+
+                    menu.Print();
+                }
+
+                else {
+                    cout << "[!] INVALID CHOICE [!]";
+                    menu.UpdateOption(3, 13);
+
+                    clear();
+                    menu.Print();
+                }
             }
-            else if (changeMode == 2) {
+
+            else if (GetAsyncKeyState(VK_F3)) {
+                setFov = !setFov;
+
+                menu.UpdateOption(4, 1);
+                Sleep(1000);
                 clear();
-                cout << "[+] AIM KEY SET TO TOGGLE [+]";
+                cin.clear();
+                fflush(stdin);
+
+                cout << "TO SET DEFAULT VALUES ENTER 100, 100 (RECOMMENDED VALUES 20-150)" << endl << endl;
+
+                cout << "HORIZONTAL FOV: ";
+                cin >> fovW;
+
+                cout << "VERTICAL FOV: ";
+                cin >> fovH;
+
+                Sleep(1000);
+                clear();
+
+                cin.clear();
+                fflush(stdin);
+                menu.UpdateOption(4, 6);
+                menu.Print();
             }
 
+            else if (GetAsyncKeyState(VK_MENU)) {
+                changeConfig = !changeConfig;
 
-            clear();
-            Sleep(500);
+                menu.UpdateOption(5, 1);
+                Sleep(1000);
+                clear();
 
-            menu.UpdateOption(3, 12);
-            clear();
+                cout << "[-] SENSITIVITY: ";
+                cin >> sensitivity;
+                cout << "[-] SMOOTHING: ";
+                cin >> smoothing;
+                cout << "[-] MODE: ";
+                cin >> mode;
+                Sleep(1000);
+                clear();
 
-            menu.Print();
-        }
+                cout << "[+] CONFIGURATION SAVED [+]";
+                Sleep(1000);
+                cin.clear();
+                fflush(stdin);
+                menu.UpdateOption(5, 6);
+                menu.Print();
+            }
 
-        else {
-            cout << "[!] INVALID CHOICE [!]";
-            menu.UpdateOption(3, 13);
-
-            clear();
-            menu.Print();
-        }
-        }
-
-        else if (GetAsyncKeyState(VK_MENU)) {
-            changeConfig = !changeConfig;
-
-            menu.UpdateOption(4, 1);
-            Sleep(1000);
-            clear();
-
-            cout << "[-] SENSITIVITY: ";
-            cin >> sensitivity;
-            cout << "[-] SMOOTHING: ";
-            cin >> smoothing;
-            cout << "[-] MODE: ";
-            cin >> mode;
-            Sleep(1000);
-            clear();
-
-            cout << "[+] CONFIGURATION SAVED [+]";
-            Sleep(1000);
-            cin.clear();
-            fflush(stdin);
-            menu.UpdateOption(4, 6);
-            menu.Print();
-        }
-
-        else if (GetAsyncKeyState(VK_ESCAPE)) {
+            else if (GetAsyncKeyState(VK_ESCAPE)) {
                 commit = !commit;
                 menu.UpdateOption(1);
                 if (commit) {
                     menu.UpdateProgressBar(0, 0);
                     //the loading bar to indicate that everything worked and the program didn't stall
-                    for (int i = 0; i < 99; i+=6) {
+                    for (int i = 0; i < 99; i += 6) {
                         menu.UpdateProgressBar(0, (float)i);
                         Sleep(20);
                     }
                     menu.UpdateProgressBar(0, -1);
-                    menu.UpdateOption(3 ,6);
+                    menu.UpdateOption(3, 6);
 
                     clear();
                     cout << endl << endl << endl;
                     cout << "[$] SUCCESS - LAUNCH YOUR GAME [$]" << endl;
-                    cout << "[!] THIS PROMPT WILL CLOSE IN 5 SECONDS... [!]";
+                    cout << "[!] THIS PROMPT WILL CLOSE IN 5 SECONDS [!]";
                     Sleep(5000);
                     fclose(w_f);
                     fclose(r_f);
@@ -753,13 +1018,13 @@ int main(void) {
                         }
                         interception_send(context, device, &stroke, 1);
                         //end
-                        
+
                     }
 
                 }
+            }
         }
     }
-
     return 0;
 }
 
