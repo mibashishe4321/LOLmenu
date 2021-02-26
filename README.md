@@ -36,7 +36,8 @@ From @pean153's post "Smoothing has reasonable values around 0.01-0.2 based on y
 **WHEN CHANGING YOUR TOGGLE KEY IT'S NORMAL TO SEE "ENTER CHAR UP TO: " (THIS IS BECAUSE OF PRESSING F2 IN CONSOLE) IT'S SAFE TO IGNORE, PRESS ANY KEY TO GET RID OF IT AND ENTER YOUR CHOICE.**
 
 # KNOWN BUGS
- - None yet, please let me know if any :)
+ - When setting certain settings, your input from the previous setting you've set will be in the prompt. To avoid any errors, remove the things present and type your selection.
+ I've tried everything to fix this. The cin.clear() doesn't work for some reason. Maybe I'm missing something; feel free to let me know.
 
 # UPDATE #1
 - Added an aim FOV option
