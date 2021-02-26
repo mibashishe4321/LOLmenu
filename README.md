@@ -33,9 +33,9 @@ From @pean153's post "Smoothing has reasonable values around 0.01-0.2 based on y
 
 **EVERYTHING IS CASE SENSITIVE. WHEN ENTERING YOUR SELECTION (e.g., CHEST, NECK, HEAD), TYPE IT IN ALL CAPS; OTHERWISE, IT WON'T GO THROUGH. THE PROGRAM SHOULD TELL YOU IF WHAT YOU'VE ENTERED IS INVALID.**
 
+**WHEN CHANGING YOUR TOGGLE KEY IT'S NORMAL TO SEE "ENTER CHAR UP TO: " (THIS IS BECAUSE OF PRESSING F2 IN CONSOLE) IT'S SAFE TO IGNORE, PRESS ANY KEY TO GET RID OF IT AND ENTER YOUR CHOICE.**
+
 # KNOWN BUGS
-**WHEN SELECTING YOUR TOGGLE-KEY SOMETHING COMES UP SAYING "ENTER CHAR TO COPY UP TO: "**
-- It's safe to ignore this; press any key to get rid of it and continue to enter your selection.
-- I don't know what causes this. If you see something feel free to let me know in the forum :)
+ - None yet, please let me know if any :)
 
 # ENJOY :D
