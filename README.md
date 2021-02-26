@@ -38,4 +38,20 @@ From @pean153's post "Smoothing has reasonable values around 0.01-0.2 based on y
 # KNOWN BUGS
  - None yet, please let me know if any :)
 
+# UPDATE #1
+- Added an aim FOV option
+- Added the option to load a config; in the GitHub you'll see "config.ini" if you wish to use this, put it in the directory of whatever you're injecting to, right-click it, and press edit. Then from there, you enter your settings and launch the cheat 
++ When the config is present, you'll be asked if you want to use the config file when you launch the cheat. If you type NO (case sensitive), it will continue to the usual set-up. If you type YES, it will load the config, display your config and
+automatically close.
++ If you wish to not use the config at all, do not add it to the directory of your injected program, and it will continue with the normal set up prompt 
++ All the instructions for config will be in the config.ini
+
+Spent a couple hours writing this. Hope you guys enjoy. Have fun.
+
+Updated image 1:
+https://imgur.com/a/mplaLn7
+
+Updated image 2:
+https://imgur.com/a/98t2kIM
+
 # ENJOY :D
