@@ -374,7 +374,7 @@ int main(void) {
                 mb4 = true;
             }
             else if (reader.Get("settings", "toggle key", "") == "MB5") {
-                lClick = true;
+                mb5 = true;
             }
 
             if (reader.Get("settings", "hold or toggle", "") == "TOGGLE") {
