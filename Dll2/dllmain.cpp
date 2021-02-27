@@ -373,7 +373,7 @@ int main(void) {
             else if (reader.Get("settings", "toggle key", "") == "MB4") {
                 mb4 = true;
             }
-            else if (reader.Get("settings", "toggle key", "") == "mb5") {
+            else if (reader.Get("settings", "toggle key", "") == "MB5") {
                 lClick = true;
             }
 
